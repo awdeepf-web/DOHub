@@ -17,7 +17,10 @@ export default async function DashboardLayout({
   const organization = await brandingService.getById(profile.organization_id);
 
   const themeStyle = organization
-    ? ({ '--brand-primary': organization.theme_primary_color } as React.CSSProperties)
+    ? ({
+        '--brand-primary': organization.theme_primary_color,
+        '--brand-secondary': organization.theme_secondary_color,
+      } as React.CSSProperties)
     : undefined;
 
   return (
