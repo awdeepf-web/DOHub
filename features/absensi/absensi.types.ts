@@ -28,3 +28,11 @@ export interface AttendanceHistoryRow {
   alphaCount: number;
   totalCount: number;
 }
+
+export interface AttendanceTodayOverview {
+  attendancePercentage: number;
+  trendPoints: number;
+  totalHadir: number;
+  totalIzinSakit: number;
+  activeClassesToday: number;
+}

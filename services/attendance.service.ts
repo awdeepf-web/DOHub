@@ -4,8 +4,12 @@ import { AttendanceRecordRepository } from '@/repositories/attendance-record.rep
 import { ClassRepository } from '@/repositories/class.repository';
 import { ClassStudentRepository } from '@/repositories/class-student.repository';
 import { StudentRepository } from '@/repositories/student.repository';
-import type { AttendanceStatus } from '@/types/database.types';
-import type { AttendanceHistoryRow, AttendanceStudentRow } from '@/features/absensi/absensi.types';
+import type { AttendanceStatus, AttendanceRecord } from '@/types/database.types';
+import type {
+  AttendanceHistoryRow,
+  AttendanceStudentRow,
+  AttendanceTodayOverview,
+} from '@/features/absensi/absensi.types';
 
 export interface AttendanceSessionData {
   classId: string;
@@ -13,6 +17,20 @@ export interface AttendanceSessionData {
   date: string;
   sessionNotes: string;
   students: AttendanceStudentRow[];
+}
+
+function todayIso(offsetDays = 0): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return date.toISOString().slice(0, 10);
+}
+
+function summarize(records: AttendanceRecord[]) {
+  const hadir = records.filter((r) => r.status === 'hadir').length;
+  const izinSakit = records.filter((r) => r.status === 'izin' || r.status === 'sakit').length;
+  const total = records.length;
+  const percentage = total > 0 ? Math.round((hadir / total) * 100) : 0;
+  return { hadir, izinSakit, total, percentage };
 }
 
 export class AttendanceService {
@@ -146,6 +164,46 @@ export class AttendanceService {
     );
 
     return { data: rows, total };
+  }
+
+  /**
+   * Ringkasan absensi HARI INI, dipakai untuk stat cards di halaman Absensi.
+   * Trend dihitung dari selisih persentase kehadiran hari ini vs kemarin.
+   */
+  async getTodayOverview(organizationId: string): Promise<AttendanceTodayOverview> {
+    const supabase = createClient();
+    const sessionRepository = new AttendanceSessionRepository(supabase);
+    const recordRepository = new AttendanceRecordRepository(supabase);
+
+    const allSessions = await sessionRepository.list({ organizationId, pageSize: 1000 });
+    const today = todayIso(0);
+    const yesterday = todayIso(-1);
+
+    const todaySessions = allSessions.data.filter((s) => s.session_date === today);
+    const yesterdaySessions = allSessions.data.filter((s) => s.session_date === yesterday);
+
+    const todayRecordsNested = await Promise.all(
+      todaySessions.map((session) => recordRepository.findBySession(session.id)),
+    );
+    const todayRecords = todayRecordsNested.flat();
+
+    const yesterdayRecordsNested = await Promise.all(
+      yesterdaySessions.map((session) => recordRepository.findBySession(session.id)),
+    );
+    const yesterdayRecords = yesterdayRecordsNested.flat();
+
+    const todaySummary = summarize(todayRecords);
+    const yesterdaySummary = summarize(yesterdayRecords);
+
+    const activeClassesToday = new Set(todaySessions.map((s) => s.class_id)).size;
+
+    return {
+      attendancePercentage: todaySummary.percentage,
+      trendPoints: todaySummary.percentage - yesterdaySummary.percentage,
+      totalHadir: todaySummary.hadir,
+      totalIzinSakit: todaySummary.izinSakit,
+      activeClassesToday,
+    };
   }
 }
 
