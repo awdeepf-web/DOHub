@@ -1,5 +1,5 @@
 'use client';
-
+import { PlatformLogo } from '@/components/layout/platform-logo';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -197,15 +197,7 @@ export function DashboardShell({
         )}
       >
         <div className="flex items-center justify-between border-b border-border/60 p-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              D
-            </span>
-            <div>
-              <p className="text-base font-bold leading-none">DOHub</p>
-              <p className="text-xs text-muted-foreground">Bimbel Management</p>
-            </div>
-          </div>
+          <PlatformLogo />
           <button
             type="button"
             className="md:hidden"
