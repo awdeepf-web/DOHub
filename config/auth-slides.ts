@@ -19,14 +19,17 @@ export const AUTH_SLIDES: AuthSlide[] = [
   {
     title: 'Kelola Bimbel Kamu Lebih Mudah',
     subtitle: 'Satu platform untuk siswa, guru, kelas, absensi, hingga pembayaran.',
+    imageUrl: 'https://i.ibb.co.com/LDq7v95K/Gemini-Generated-Image-8sm2b48sm2b48sm2.png', // <-- Masukkan URL gambar 1 di sini
   },
   {
     title: 'Laporan Keuangan Real-time',
     subtitle: 'Pantau pemasukan dan tagihan bimbel kapan saja, di mana saja.',
+    imageUrl: 'https://i.ibb.co.com/m5M0Rz4G/Gemini-Generated-Image-6l5h826l5h826l5h.png', // <-- Masukkan URL gambar 2 di sini
   },
   {
     title: 'Landing Page Otomatis',
     subtitle: 'Setiap bimbel dapat halaman promosi sendiri, tanpa perlu coding.',
+    imageUrl: 'https://i.ibb.co.com/qLVNmMC6/Gemini-Generated-Image-ll30rvll30rvll30.png', // <-- Masukkan URL gambar 3 di sini
   },
 ];
 
