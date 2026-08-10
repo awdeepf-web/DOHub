@@ -7,6 +7,7 @@ import { TeacherRepository } from '@/repositories/teacher.repository';
 import { ClassRepository } from '@/repositories/class.repository';
 import { dashboardAnalyticsService } from '@/services/dashboard-analytics.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LineChart } from '@/components/ui/line-chart';
 import { ROLE_LABELS } from '@/utils/rbac';
 import { formatCurrency, formatDateID } from '@/utils/payment';
 
@@ -42,18 +43,27 @@ export default async function DashboardPage() {
 
   const organization = profile ? await orgRepository.findById(profile.organization_id) : null;
 
-  const [studentResult, teacherResult, classResult, classBreakdown, teacherBreakdown, worstAttendance, topOutstanding] =
-    profile
-      ? await Promise.all([
-          studentRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
-          teacherRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
-          classRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
-          dashboardAnalyticsService.getClassStatusBreakdown(profile.organization_id),
-          dashboardAnalyticsService.getTeacherStatusBreakdown(profile.organization_id),
-          dashboardAnalyticsService.getWorstAttendance(profile.organization_id),
-          dashboardAnalyticsService.getTopOutstandingInvoices(profile.organization_id),
-        ])
-      : [{ total: 0 }, { total: 0 }, { total: 0 }, [], [], [], []];
+  const [
+    studentResult,
+    teacherResult,
+    classResult,
+    classBreakdown,
+    teacherBreakdown,
+    worstAttendance,
+    topOutstanding,
+    attendanceTrend,
+  ] = profile
+    ? await Promise.all([
+        studentRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
+        teacherRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
+        classRepository.list({ organizationId: profile.organization_id, pageSize: 1 }),
+        dashboardAnalyticsService.getClassStatusBreakdown(profile.organization_id),
+        dashboardAnalyticsService.getTeacherStatusBreakdown(profile.organization_id),
+        dashboardAnalyticsService.getWorstAttendance(profile.organization_id),
+        dashboardAnalyticsService.getTopOutstandingInvoices(profile.organization_id),
+        dashboardAnalyticsService.getAttendanceTrend(profile.organization_id),
+      ])
+    : [{ total: 0 }, { total: 0 }, { total: 0 }, [], [], [], [], []];
 
   const stats = [
     { label: 'Total Siswa', value: studentResult.total, icon: Users, accent: 'bg-blue-500/10 text-blue-600' },
@@ -88,6 +98,15 @@ export default async function DashboardPage() {
           );
         })}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Tren Kehadiran 7 Hari Terakhir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LineChart data={attendanceTrend} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>

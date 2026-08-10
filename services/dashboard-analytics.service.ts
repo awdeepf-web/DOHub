@@ -96,6 +96,33 @@ export class DashboardAnalyticsService {
   }
 
   /**
+   * Persentase kehadiran per hari, 7 hari terakhir — untuk grafik tren.
+   */
+  async getAttendanceTrend(
+    organizationId: string,
+  ): Promise<{ label: string; value: number }[]> {
+    const supabase = createClient();
+    const recordRepository = new AttendanceRecordRepository(supabase);
+
+    const sessions = await recordRepository.listInRange(organizationId, daysAgoIso(6), daysAgoIso(0));
+    const result: { label: string; value: number }[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = daysAgoIso(i);
+      const daySessions = sessions.filter((s) => s.session_date === date);
+      const recordsNested = await Promise.all(daySessions.map((s) => recordRepository.findBySession(s.id)));
+      const records = recordsNested.flat();
+      const hadir = records.filter((r) => r.status === 'hadir').length;
+      const percentage = records.length > 0 ? Math.round((hadir / records.length) * 100) : 0;
+
+      const label = new Intl.DateTimeFormat('id-ID', { weekday: 'short' }).format(new Date(date));
+      result.push({ label, value: percentage });
+    }
+
+    return result;
+  }
+
+  /**
    * Top 5 invoice belum lunas dengan nominal terbesar.
    */
   async getTopOutstandingInvoices(organizationId: string): Promise<TopOutstandingInvoiceRow[]> {

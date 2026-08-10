@@ -65,6 +65,28 @@ export class ReportService {
     };
   }
 
+  /**
+   * Total pemasukan per bulan, 6 bulan terakhir — untuk grafik tren pemasukan.
+   */
+  async getRevenueTrend(organizationId: string): Promise<{ label: string; value: number }[]> {
+    const supabase = createClient();
+    const paymentRepository = new PaymentRepository(supabase);
+    const result: { label: string; value: number }[] = [];
+
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const { from, to } = getMonthRange(monthStr);
+      const payments = await paymentRepository.listPaidInRange(organizationId, from, to);
+      const total = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const label = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date);
+      result.push({ label, value: total });
+    }
+
+    return result;
+  }
+
   async getOutstandingInvoices(organizationId: string): Promise<OutstandingInvoiceRow[]> {
     const supabase = createClient();
     const invoiceRepository = new InvoiceRepository(supabase);

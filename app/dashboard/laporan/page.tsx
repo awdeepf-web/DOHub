@@ -7,6 +7,8 @@ import { ReportFilter } from '@/features/laporan/components/report-filter';
 import { SummaryCards } from '@/features/laporan/components/summary-cards';
 import { BreakdownTable } from '@/features/laporan/components/breakdown-table';
 import { OutstandingInvoicesTable } from '@/features/laporan/components/outstanding-invoices-table';
+import { LineChart } from '@/components/ui/line-chart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function LaporanPage({
   searchParams,
@@ -21,9 +23,10 @@ export default async function LaporanPage({
 
   const month = searchParams.month ?? getCurrentMonthValue();
 
-  const [summary, outstandingInvoices] = await Promise.all([
+  const [summary, outstandingInvoices, revenueTrend] = await Promise.all([
     reportService.getFinancialSummary(profile.organization_id, month),
     reportService.getOutstandingInvoices(profile.organization_id),
+    reportService.getRevenueTrend(profile.organization_id),
   ]);
 
   return (
@@ -36,6 +39,15 @@ export default async function LaporanPage({
       <ReportFilter defaultMonth={month} />
 
       <SummaryCards summary={summary} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Tren Pemasukan 6 Bulan Terakhir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LineChart data={revenueTrend} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <BreakdownTable title="Pemasukan per Kategori" items={summary.categoryBreakdown} />
