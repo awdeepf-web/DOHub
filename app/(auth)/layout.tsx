@@ -9,25 +9,28 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative grid min-h-[calc(100vh-57px)] grid-cols-1 overflow-hidden lg:grid-cols-2">
-      {/* Background dekoratif — khusus mobile/tablet (desktop sudah punya slideshow di sisi kanan) */}
-      <div className="pointer-events-none absolute inset-0 -z-10 lg:hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
-        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-secondary/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+      {/* Slideshow SEKARANG tampil di semua ukuran layar sebagai background penuh */}
+      <div className="absolute inset-0 -z-10 lg:hidden">
+        <AuthBackgroundSlideshow />
       </div>
 
       <main className="relative flex flex-col px-4 py-6">
         <div className="flex items-center justify-between">
-          <PlatformLogo showTagline={false} />
+          <PlatformLogo showTagline={false} className="lg:[&_p]:text-white lg:[&_span]:text-white" />
           <ThemeToggle />
         </div>
 
         <div className="flex flex-1 items-center justify-center py-8">
-          <div className="w-full max-w-md">{children}</div>
+          <div className="w-full max-w-md rounded-xl bg-background/95 p-6 shadow-xl backdrop-blur lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-0">
+            {children}
+          </div>
         </div>
       </main>
 
-      <AuthBackgroundSlideshow />
+      {/* Versi desktop tetap seperti semula: slideshow di kolom kanan */}
+      <div className="hidden lg:block">
+        <AuthBackgroundSlideshow />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import { Footer } from '@/components/layout/footer';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { ServiceWorkerRegister } from '@/components/providers/service-worker-register';
 import './globals.css';
 
 const fontSans = Inter({
@@ -19,6 +20,15 @@ const fontMono = Source_Code_Pro({
 export const metadata: Metadata = {
   title: 'DOHub Bimbel Management System',
   description: 'Sistem manajemen bimbingan belajar multi-tenant',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'DOHub',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0f172a',
 };
 
 const noFlashScript = `
@@ -43,6 +53,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col font-sans">
         <ThemeProvider>
+          <ServiceWorkerRegister />
           <div className="flex-1">{children}</div>
           <Footer />
         </ThemeProvider>

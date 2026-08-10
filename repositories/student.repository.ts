@@ -61,6 +61,18 @@ export class StudentRepository extends BaseRepository<Student> {
     return data;
   }
 
+  async findByIds(ids: string[]): Promise<Student[]> {
+    if (ids.length === 0) return [];
+    const { data, error } = await this.supabase
+      .from('students')
+      .select('*')
+      .in('id', ids)
+      .is('deleted_at', null);
+
+    this.handleError('findByIds', error);
+    return data ?? [];
+  }
+
   async create(
     input: Omit<Student, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>,
   ): Promise<Student> {
