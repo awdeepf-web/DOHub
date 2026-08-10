@@ -93,7 +93,14 @@ export default async function UpgradePage() {
                 </li>
               ))}
             </ul>
-            <UpgradeButton currentPlan={organization.plan_type} />
+            {!isPro && (
+              <UpgradeButton organizationName={organization.name} ownerName={profile.full_name} />
+            )}
+            {isPro && (
+              <p className="rounded-md bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-700">
+                Kamu sudah menikmati paket Pro 🎉
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

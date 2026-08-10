@@ -1,49 +1,29 @@
-'use client';
+import { MessageCircle } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { upgradeToProAction, downgradeToFreeAction } from '@/features/upgrade/upgrade.actions';
+const ADMIN_WHATSAPP_NUMBER = '628985151650';
 
-export function UpgradeButton({ currentPlan }: { currentPlan: 'free' | 'pro' }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  function handleUpgrade() {
-    startTransition(async () => {
-      const result = await upgradeToProAction();
-      if (result.error) {
-        window.alert(result.error);
-        return;
-      }
-      router.refresh();
-    });
-  }
-
-  function handleDowngrade() {
-    const confirmed = window.confirm('Turunkan kembali ke paket Free? Fitur Pro akan dinonaktifkan.');
-    if (!confirmed) return;
-    startTransition(async () => {
-      const result = await downgradeToFreeAction();
-      if (result.error) {
-        window.alert(result.error);
-        return;
-      }
-      router.refresh();
-    });
-  }
-
-  if (currentPlan === 'pro') {
-    return (
-      <Button type="button" variant="outline" onClick={handleDowngrade} disabled={isPending}>
-        {isPending ? 'Memproses...' : 'Turunkan ke Free (testing)'}
-      </Button>
-    );
-  }
+export function UpgradeButton({
+  organizationName,
+  ownerName,
+}: {
+  organizationName: string;
+  ownerName: string;
+}) {
+  const message = encodeURIComponent(
+    `Halo Admin DOHub, saya ${ownerName} dari bimbel "${organizationName}". Saya ingin upgrade akun saya ke paket Pro. Mohon informasi lebih lanjut ya. Terima kasih.`,
+  );
+  const waLink = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
 
   return (
-    <Button type="button" onClick={handleUpgrade} disabled={isPending} className="w-full">
-      {isPending ? 'Memproses...' : 'Upgrade ke Pro Sekarang'}
-    </Button>
+    <a
+      href={waLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={buttonVariants({ variant: 'default' }) + ' w-full'}
+    >
+      <MessageCircle className="mr-2 h-4 w-4" />
+      Upgrade ke Pro Sekarang
+    </a>
   );
 }

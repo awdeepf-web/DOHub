@@ -4,6 +4,7 @@ import { hasPermission } from '@/utils/rbac';
 import { brandingService } from '@/services/branding.service';
 import { BrandingForm } from '@/features/branding/components/branding-form';
 import { LogoUploadForm } from '@/features/branding/components/logo-upload-form';
+import { FaviconUploadForm } from '@/features/branding/components/favicon-upload-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function BrandingPage() {
@@ -33,6 +34,15 @@ export default async function BrandingPage() {
         </CardHeader>
         <CardContent>
           <LogoUploadForm currentLogoUrl={organization.logo_url} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Favicon</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FaviconUploadForm currentFaviconUrl={organization.favicon_url} />
         </CardContent>
       </Card>
 

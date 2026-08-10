@@ -35,6 +35,7 @@ export async function generateMetadata({
   const data = await landingService.getPublicLandingData(params.slug);
   return {
     title: data ? data.organization.name : 'Bimbel Tidak Ditemukan',
+    icons: data?.organization.favicon_url ? { icon: data.organization.favicon_url } : undefined,
   };
 }
 

@@ -93,6 +93,46 @@ export class BrandingService {
     }
   }
 
+  async uploadFavicon(
+    organizationId: string,
+    file: File,
+  ): Promise<{ error: string | null; faviconUrl: string | null }> {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return { error: 'Format file harus PNG, JPG, WEBP, atau SVG', faviconUrl: null };
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return { error: 'Ukuran file maksimal 2MB', faviconUrl: null };
+    }
+
+    const supabase = createClient();
+    const orgRepository = new OrganizationRepository(supabase);
+
+    const extension = getFileExtension(file.name);
+    const path = `${organizationId}/favicon-${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage.from('branding').upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+
+    if (uploadError) {
+      return { error: uploadError.message, faviconUrl: null };
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('branding').getPublicUrl(path);
+    const faviconUrl = publicUrlData.publicUrl;
+
+    try {
+      await orgRepository.update(organizationId, { favicon_url: faviconUrl });
+      return { error: null, faviconUrl };
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : 'Gagal menyimpan URL favicon',
+        faviconUrl: null,
+      };
+    }
+  }
+
   async getById(organizationId: string): Promise<Organization | null> {
     const supabase = createClient();
     const orgRepository = new OrganizationRepository(supabase);

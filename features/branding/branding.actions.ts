@@ -80,3 +80,29 @@ export async function uploadLogoAction(
   revalidatePath('/dashboard');
   return { error: null, success: true, logoUrl };
 }
+
+export async function uploadFaviconAction(
+  _prevState: LogoUploadState,
+  formData: FormData,
+): Promise<LogoUploadState> {
+  const profile = await requireProfile();
+
+  try {
+    assertPermission(profile, 'branding:manage');
+  } catch (err) {
+    return { ...initialLogoUploadState, error: (err as Error).message };
+  }
+
+  const file = formData.get('favicon');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ...initialLogoUploadState, error: 'Pilih file favicon terlebih dahulu' };
+  }
+
+  const { error, faviconUrl } = await brandingService.uploadFavicon(profile.organization_id, file);
+  if (error) {
+    return { ...initialLogoUploadState, error };
+  }
+
+  revalidatePath('/dashboard/branding');
+  return { error: null, success: true, logoUrl: faviconUrl };
+}
