@@ -6,6 +6,6 @@
  */
 export const PLATFORM_NAME = 'DOHub';
 export const PLATFORM_TAGLINE = 'Bimbel Management';
-export const PLATFORM_LOGO_URL: string | null = null;
+export const PLATFORM_LOGO_URL: string | null = 'https://i.ibb.co.com/whkZkk1q/DO-HUB.png';
 // Contoh setelah diisi:
 // export const PLATFORM_LOGO_URL: string | null = 'https://xxxxx.supabase.co/storage/v1/object/public/branding/dohub-logo.png';
