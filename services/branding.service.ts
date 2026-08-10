@@ -1,28 +1,34 @@
 import { createClient } from '@/services/supabase/server';
 import { OrganizationRepository } from '@/repositories/organization.repository';
+import { canUseCustomDomain, canUseAnalytics } from '@/utils/plan-limits';
 import type { BrandingInput } from '@/features/branding/branding.validation';
 import type { Organization } from '@/types/database.types';
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
-const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 function toNullable(value: string | undefined): string | null {
   return value && value.trim().length > 0 ? value.trim() : null;
 }
 
 function getFileExtension(fileName: string): string {
-  const parts = fileName.split('.');
-  if (parts.length > 1) {
-    const ext = parts.pop();
-    if (ext) return ext.toLowerCase();
-  }
-  return 'png';
+  const ext = fileName.split('.').pop();
+  return ext ? ext.toLowerCase() : 'png';
 }
 
 export class BrandingService {
   async update(organizationId: string, input: BrandingInput): Promise<{ error: string | null }> {
     const supabase = createClient();
     const orgRepository = new OrganizationRepository(supabase);
+
+    const existing = await orgRepository.findById(organizationId);
+    if (!existing) {
+      return { error: 'Organisasi tidak ditemukan' };
+    }
+
+    // Pertahanan sisi server: field Pro tetap diabaikan meski form berhasil
+    // dikirim (misal user Free mengakali UI), memastikan gating konsisten.
+    const isPro = existing.plan_type === 'pro';
 
     try {
       await orgRepository.update(organizationId, {
@@ -37,6 +43,9 @@ export class BrandingService {
         address: toNullable(input.address),
         phone: toNullable(input.phone),
         email: toNullable(input.email),
+        custom_domain: isPro && canUseCustomDomain(existing.plan_type) ? toNullable(input.customDomain) : existing.custom_domain,
+        meta_pixel_id: isPro && canUseAnalytics(existing.plan_type) ? toNullable(input.metaPixelId) : existing.meta_pixel_id,
+        google_analytics_id: isPro && canUseAnalytics(existing.plan_type) ? toNullable(input.googleAnalyticsId) : existing.google_analytics_id,
       });
       return { error: null };
     } catch (err) {

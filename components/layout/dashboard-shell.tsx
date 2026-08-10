@@ -19,6 +19,7 @@ import {
   Palette,
   UserCog,
   Settings,
+  Sparkles,
   Search,
   Bell,
   ChevronDown,
@@ -45,6 +46,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   '/dashboard/branding': Palette,
   '/dashboard/users': UserCog,
   '/dashboard/settings': Settings,
+  '/dashboard/upgrade': Sparkles,
 };
 
 function GlobalSearchBar() {

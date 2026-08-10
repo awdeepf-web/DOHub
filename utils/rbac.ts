@@ -72,6 +72,7 @@ export const NAV_ITEMS: {
   { label: 'Laporan', href: '/dashboard/laporan', allowedRoles: ['owner', 'admin', 'finance'] },
   { label: 'Landing Page', href: '/dashboard/landing', allowedRoles: ['owner', 'admin'] },
   { label: 'Branding', href: '/dashboard/branding', allowedRoles: ['owner', 'admin'] },
+  { label: 'Upgrade', href: '/dashboard/upgrade', allowedRoles: ['owner'] },
   { label: 'User Management', href: '/dashboard/users', allowedRoles: ['owner', 'admin'] },
   { label: 'Settings', href: '/dashboard/settings', allowedRoles: ['owner', 'admin'] },
 ];

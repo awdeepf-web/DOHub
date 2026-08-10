@@ -14,6 +14,9 @@ export const brandingSchema = z.object({
   address: z.string().max(255).optional().or(z.literal('')),
   phone: z.string().max(20).optional().or(z.literal('')),
   email: z.string().email('Format email tidak valid').optional().or(z.literal('')),
+  customDomain: z.string().max(255).optional().or(z.literal('')),
+  metaPixelId: z.string().max(50).optional().or(z.literal('')),
+  googleAnalyticsId: z.string().max(50).optional().or(z.literal('')),
 });
 
 export type BrandingInput = z.infer<typeof brandingSchema>;

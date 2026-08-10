@@ -35,6 +35,9 @@ export async function updateBrandingAction(
     address: formData.get('address'),
     phone: formData.get('phone'),
     email: formData.get('email'),
+    customDomain: formData.get('customDomain'),
+    metaPixelId: formData.get('metaPixelId'),
+    googleAnalyticsId: formData.get('googleAnalyticsId'),
   });
 
   if (!parsed.success) {
