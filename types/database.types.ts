@@ -19,6 +19,9 @@ export type PaymentStatus = 'paid' | 'pending' | 'cancelled';
 export type InvoiceStatus = 'unpaid' | 'paid' | 'overdue' | 'cancelled';
 export type LandingSectionType = 'hero' | 'about' | 'features' | 'cta' | 'contact' | 'custom';
 
+// Type baru yang ditambahkan:
+export type PlanType = 'free' | 'pro';
+
 export interface Organization {
   id: string;
   name: string;
@@ -36,6 +39,13 @@ export interface Organization {
   phone: string | null;
   email: string | null;
   is_active: boolean;
+  
+  // 4 Field baru yang ditambahkan:
+  plan_type: PlanType;
+  custom_domain: string | null;
+  meta_pixel_id: string | null;
+  google_analytics_id: string | null;
+
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

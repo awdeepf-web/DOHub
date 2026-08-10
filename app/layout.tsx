@@ -1,15 +1,26 @@
 import type { Metadata } from 'next';
+import { Inter, Source_Code_Pro } from 'next/font/google';
 import { Footer } from '@/components/layout/footer';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import './globals.css';
+
+const fontSans = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const fontMono = Source_Code_Pro({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'DOHub Bimbel Management System',
   description: 'Sistem manajemen bimbingan belajar multi-tenant',
 };
 
-// Script kecil ini jalan SEBELUM React hydrate, supaya tidak ada
-// "kedipan" warna terang sekilas saat user sudah pilih mode gelap.
 const noFlashScript = `
 (function() {
   try {
@@ -26,11 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning className={`${fontSans.variable} ${fontMono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col font-sans">
         <ThemeProvider>
           <div className="flex-1">{children}</div>
           <Footer />

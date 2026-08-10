@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import Script from 'next/script';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
   Sparkles,
@@ -15,6 +17,14 @@ import {
 import { landingService } from '@/services/landing.service';
 import { buttonVariants } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import {
+  canRemoveWatermark,
+  canUseAnalytics,
+  canUseCustomColor,
+  getMaxSections,
+  FREE_PLAN_DEFAULT_PRIMARY,
+  FREE_PLAN_DEFAULT_SECONDARY,
+} from '@/utils/plan-limits';
 import type { LandingSectionType } from '@/types/database.types';
 
 export async function generateMetadata({
@@ -45,19 +55,69 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
   }
 
   const { organization, sections } = data;
-  const heroSection = sections.find((s) => s.section_type === 'hero');
-  const otherSections = sections.filter((s) => s.section_type !== 'hero');
+  const plan = organization.plan_type;
+
+  // ===== GATING: batas jumlah section untuk akun Free =====
+  const visibleSections = sections.slice(0, getMaxSections(plan));
+  const heroSection = visibleSections.find((s) => s.section_type === 'hero');
+  const otherSections = visibleSections.filter((s) => s.section_type !== 'hero');
+
+  // ===== GATING: warna kustom hanya untuk Pro =====
+  const primaryColor = canUseCustomColor(plan)
+    ? organization.theme_primary_color
+    : FREE_PLAN_DEFAULT_PRIMARY;
+  const secondaryColor = canUseCustomColor(plan)
+    ? organization.theme_secondary_color
+    : FREE_PLAN_DEFAULT_SECONDARY;
 
   const themeStyle = {
-    '--brand-primary': organization.theme_primary_color,
-    '--brand-secondary': organization.theme_secondary_color,
+    '--brand-primary': primaryColor,
+    '--brand-secondary': secondaryColor,
   } as React.CSSProperties;
 
   const waLink = `https://wa.me/${(organization.social_whatsapp ?? organization.phone ?? '').replace(/\D/g, '')}`;
   const hasWa = Boolean(organization.social_whatsapp || organization.phone);
 
+  // ===== GATING: analytics hanya untuk Pro =====
+  const showAnalytics = canUseAnalytics(plan);
+  const showWatermark = !canRemoveWatermark(plan);
+
   return (
     <div style={themeStyle}>
+      {/* ===== Analytics scripts (Pro tier only) ===== */}
+      {showAnalytics && organization.google_analytics_id && (
+        <>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${organization.google_analytics_id}`}
+            strategy="afterInteractive"
+          />
+          <Script id="ga4-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${organization.google_analytics_id}');
+            `}
+          </Script>
+        </>
+      )}
+      {showAnalytics && organization.meta_pixel_id && (
+        <Script id="meta-pixel-init" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${organization.meta_pixel_id}');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      )}
+
       {/* Header sticky */}
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="container flex items-center justify-between py-4">
@@ -74,7 +134,7 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
                 {organization.name.charAt(0)}
               </div>
             )}
-            <span className="text-lg font-bold">{organization.name}</span>
+            <span className="text-lg font-semibold tracking-tight">{organization.name}</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -94,26 +154,24 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
 
       {/* ============ HERO ============ */}
       <section className="relative overflow-hidden border-b">
-        {/* Radial glow lembut */}
         <div
           className="pointer-events-none absolute left-0 top-1/2 h-[32rem] w-[32rem] -translate-y-1/2 rounded-full opacity-25 blur-3xl"
-          style={{ backgroundColor: organization.theme_primary_color }}
+          style={{ backgroundColor: primaryColor }}
         />
         <div
           className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full opacity-20 blur-3xl"
-          style={{ backgroundColor: organization.theme_secondary_color }}
+          style={{ backgroundColor: secondaryColor }}
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-background/40 via-background to-background/60" />
 
         <div className="container relative grid grid-cols-1 items-center gap-10 py-16 md:grid-cols-2 md:gap-14 md:py-24">
-          {/* Kolom Kiri — copy & CTA */}
           <div className="flex flex-col items-start gap-6 text-left">
-            <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/80 px-3 py-1.5 text-xs font-medium shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider shadow-sm">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               4.9/5 oleh 300+ Siswa
             </span>
 
-            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+            <h1 className="text-4xl font-bold leading-tight tracking-tightish md:text-5xl">
               {heroSection?.heading ?? `Wujudkan Prestasi Terbaikmu Bersama ${organization.name}`}
             </h1>
 
@@ -150,13 +208,15 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
                   Daftar Kelas Demo <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
               )}
-              <a href="#program" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+              <a
+                href="#program"
+                className={buttonVariants({ variant: 'outline', size: 'lg' }) + ' border-neutral-800/20'}
+              >
                 Lihat Program
               </a>
             </div>
           </div>
 
-          {/* Kolom Kanan — gambar */}
           <div className="relative">
             {heroSection?.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -174,7 +234,7 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
         </div>
       </section>
 
-      {/* Blok konten lainnya */}
+      {/* Blok konten lainnya (dibatasi getMaxSections untuk Free) */}
       <div id="program">
         {otherSections.map((section) => {
           const Icon = SECTION_ICON[section.section_type];
@@ -183,20 +243,24 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
           return (
             <section
               key={section.id}
-              className={isCta ? 'border-b bg-primary py-16 text-primary-foreground' : 'border-b py-16'}
+              className={
+                isCta
+                  ? 'border-b bg-primary py-16 text-primary-foreground'
+                  : 'border-b py-16'
+              }
             >
               <div className="container mx-auto max-w-3xl">
                 <div className="flex items-center gap-2">
                   <span
                     className={
                       isCta
-                        ? 'flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15'
-                        : 'flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-secondary-foreground'
+                        ? 'flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-primary-foreground/15'
+                        : 'flex h-9 w-9 items-center justify-center rounded-full border border-neutral-800/10 bg-secondary text-secondary-foreground'
                     }
                   >
                     <Icon className="h-4 w-4" />
                   </span>
-                  <h2 className="text-2xl font-bold">{section.heading}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tightish">{section.heading}</h2>
                 </div>
 
                 {section.subheading && (
@@ -214,8 +278,11 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
                           .map((line) => line.trim())
                           .filter(Boolean)
                           .map((line, index) => (
-                            <li key={index} className="flex items-start gap-2 rounded-lg border p-3 text-sm">
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <li
+                              key={index}
+                              className="flex items-start gap-2 rounded-lg border border-neutral-800/10 p-3 text-sm transition-colors hover:border-brand-accent/50"
+                            >
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" />
                               <span>{line}</span>
                             </li>
                           ))}
@@ -233,7 +300,7 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
                   <img
                     src={section.image_url}
                     alt={section.heading}
-                    className="mt-6 max-h-80 w-full rounded-lg border object-cover"
+                    className="mt-6 max-h-80 w-full rounded-lg border border-neutral-800/10 object-cover"
                   />
                 )}
 
@@ -256,7 +323,7 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
       {/* Kontak */}
       <section className="bg-muted/30 py-16 pb-28 md:pb-16">
         <div className="container mx-auto max-w-xl text-center">
-          <h2 className="text-2xl font-bold">Hubungi Kami</h2>
+          <h2 className="text-2xl font-semibold tracking-tightish">Hubungi Kami</h2>
           <div className="mt-6 space-y-3 text-sm">
             {organization.address && (
               <p className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -309,7 +376,18 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
         </div>
       </section>
 
-      {/* ============ Floating WhatsApp Button ============ */}
+      {/* ===== Watermark "Powered By" — hanya tampil untuk akun Free ===== */}
+      {showWatermark && (
+        <Link
+          href="/"
+          className="fixed bottom-6 left-6 z-40 hidden items-center gap-1.5 rounded-full border bg-background/90 px-3 py-2 font-mono text-xs text-muted-foreground shadow-md backdrop-blur transition-colors hover:border-brand-accent/50 hover:text-brand-accent md:flex"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          Dibuat dengan DOHub • Buat Website Bimbel Gratis
+        </Link>
+      )}
+
+      {/* Floating WhatsApp Button */}
       {hasWa && (
         <a
           href={waLink}
@@ -328,7 +406,7 @@ export default async function PublicLandingPage({ params }: { params: { slug: st
         </a>
       )}
 
-      {/* ============ Sticky Bottom Bar CTA — khusus mobile ============ */}
+      {/* Sticky Bottom Bar CTA — mobile only */}
       {hasWa && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/90 p-3 backdrop-blur md:hidden">
           <a
